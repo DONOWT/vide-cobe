@@ -38,14 +38,14 @@ function setup() {
       ];
 
       let base = palette[int(random(palette.length))];
-      let cString = base.toString(); // unique key for color
+      let cString = base.toString();
 
       // Assign one special square per color
       if (!specialSquares[cString]) {
         specialSquares[cString] = { col: i, row: j };
       }
 
-      grid[i][j] = new Cell(x, y, cellSize, base, cString);
+      grid[i][j] = new Cell(x, y, cellSize, base, cString, i, j);
     }
   }
 
@@ -138,14 +138,17 @@ function drawPiece(col, row, c) {
   ellipse(x, y, cellSize * 0.6, cellSize * 0.6);
 }
 
+// ---------------- Cell Class ----------------
 class Cell {
-  constructor(x, y, size, baseColor, colorKey) {
+  constructor(x, y, size, baseColor, colorKey, col, row) {
     this.x = x;
     this.y = y;
     this.size = size;
     this.baseColor = baseColor;
     this.currentColor = baseColor;
     this.colorKey = colorKey;
+    this.col = col;
+    this.row = row;
     this.isHighlighted = false;
   }
 
@@ -167,7 +170,7 @@ class Cell {
 
     // Draw thick white border for special squares
     let special = specialSquares[this.colorKey];
-    if (special.col === this.x / cellSize && special.row === this.y / cellSize) {
+    if (special.col === this.col && special.row === this.row) {
       stroke(255);
       strokeWeight(5);
       noFill();
@@ -176,6 +179,7 @@ class Cell {
   }
 }
 
+// ---------------- Dice Class ----------------
 class Dice {
   constructor(x, y, size) {
     this.x = x;
@@ -222,6 +226,7 @@ class Dice {
   }
 }
 
+// ---------------- Color Group Logic ----------------
 function activateColorGroup(colorKey) {
   for (let i = 0; i < cols; i++) {
     for (let j = 0; j < rows; j++) {
