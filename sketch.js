@@ -163,16 +163,24 @@ class Cell {
   }
 
   display() {
+    // Draw the filled square first
+    noStroke();
     fill(this.currentColor);
-    stroke(0);
-    strokeWeight(1);
     rect(this.x, this.y, this.size, this.size);
 
     // Draw thick white border for special squares
     let special = specialSquares[this.colorKey];
     if (special.col === this.col && special.row === this.row) {
       stroke(255);
-      strokeWeight(5);
+      strokeWeight(6);
+      noFill();
+      rect(this.x, this.y, this.size, this.size);
+    }
+
+    // Draw highlight outline on top
+    if (this.isHighlighted) {
+      stroke(0);
+      strokeWeight(2);
       noFill();
       rect(this.x, this.y, this.size, this.size);
     }
