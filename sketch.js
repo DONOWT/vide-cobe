@@ -16,6 +16,9 @@ let pieceBRow = 4;
 
 let isPieceATurn = true;
 
+// Track one special square per color
+let specialSquares = {};
+
 function setup() {
   createCanvas(600, 400);
 
@@ -35,7 +38,14 @@ function setup() {
       ];
 
       let base = palette[int(random(palette.length))];
-      grid[i][j] = new Cell(x, y, cellSize, base);
+      let cString = base.toString(); // unique key for color
+
+      // Assign one special square per color
+      if (!specialSquares[cString]) {
+        specialSquares[cString] = { col: i, row: j };
+      }
+
+      grid[i][j] = new Cell(x, y, cellSize, base, cString);
     }
   }
 
@@ -74,12 +84,7 @@ function mousePressed() {
     dice2.roll();
     let sum = dice1.value + dice2.value;
 
-    // Reset colors
-    for (let i = 0; i < cols; i++) {
-      for (let j = 0; j < rows; j++) {
-        grid[i][j].resetColor();
-      }
-    }
+    resetAllColors();
 
     let activeCol = isPieceATurn ? pieceACol : pieceBCol;
     let activeRow = isPieceATurn ? pieceARow : pieceBRow;
@@ -101,6 +106,8 @@ function mousePressed() {
     let clickedRow = int(mouseY / cellSize);
 
     if (grid[clickedCol][clickedRow].isHighlighted) {
+
+      // Move piece
       if (isPieceATurn) {
         pieceACol = clickedCol;
         pieceARow = clickedRow;
@@ -109,11 +116,14 @@ function mousePressed() {
         pieceBRow = clickedRow;
       }
 
-      // Reset grid
-      for (let i = 0; i < cols; i++) {
-        for (let j = 0; j < rows; j++) {
-          grid[i][j].resetColor();
-        }
+      // Check if landing on a special square
+      let landedColor = grid[clickedCol][clickedRow].colorKey;
+      let special = specialSquares[landedColor];
+
+      if (special.col === clickedCol && special.row === clickedRow) {
+        activateColorGroup(landedColor);
+      } else {
+        resetAllColors();
       }
 
       isPieceATurn = !isPieceATurn;
@@ -128,14 +138,14 @@ function drawPiece(col, row, c) {
   ellipse(x, y, cellSize * 0.6, cellSize * 0.6);
 }
 
-// ---------------- Cell Class ----------------
 class Cell {
-  constructor(x, y, size, baseColor) {
+  constructor(x, y, size, baseColor, colorKey) {
     this.x = x;
     this.y = y;
     this.size = size;
     this.baseColor = baseColor;
     this.currentColor = baseColor;
+    this.colorKey = colorKey;
     this.isHighlighted = false;
   }
 
@@ -152,11 +162,20 @@ class Cell {
   display() {
     fill(this.currentColor);
     stroke(0);
+    strokeWeight(1);
     rect(this.x, this.y, this.size, this.size);
+
+    // Draw thick white border for special squares
+    let special = specialSquares[this.colorKey];
+    if (special.col === this.x / cellSize && special.row === this.y / cellSize) {
+      stroke(255);
+      strokeWeight(5);
+      noFill();
+      rect(this.x, this.y, this.size, this.size);
+    }
   }
 }
 
-// ---------------- Dice Class ----------------
 class Dice {
   constructor(x, y, size) {
     this.x = x;
@@ -199,6 +218,24 @@ class Dice {
     if (this.value === 6) {
       ellipse(left, cy, r, r);
       ellipse(right, cy, r, r);
+    }
+  }
+}
+
+function activateColorGroup(colorKey) {
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      if (grid[i][j].colorKey === colorKey) {
+        grid[i][j].currentColor = color(0);
+      }
+    }
+  }
+}
+
+function resetAllColors() {
+  for (let i = 0; i < cols; i++) {
+    for (let j = 0; j < rows; j++) {
+      grid[i][j].resetColor();
     }
   }
 }
